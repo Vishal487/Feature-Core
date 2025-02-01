@@ -124,6 +124,7 @@ async def update_feature(
     # Update fields
     for key, value in feature_update.model_dump().items():
         setattr(db_feature, key, value)
+    db_feature.name = new_normalized_name
     
     await db.commit()
     
