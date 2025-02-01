@@ -11,7 +11,7 @@ class FeatureCreate(FeatureBase):
 
 class Feature(FeatureBase):
     id: int
-    children: List["Feature"] = []
+    children: Optional[List["Feature"]] = []
 
     class Config:
         from_attributes = True

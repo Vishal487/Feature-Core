@@ -5,7 +5,7 @@ from app.database.models import FeatureFlag
 from app.routers.v1.schemas import FeatureCreate, Feature
 from sqlalchemy.future import select
 
-from app.utility.utils import normalize_name
+from app.utility.utils import normalize_name, denormalize_name
 
 router = APIRouter()
 
@@ -13,7 +13,7 @@ router = APIRouter()
 
 async def validate_parent(db: AsyncSession, parent_id: int, current_feature_id: int = None):
     # Rule 1: A feature can't be its own parent
-    if parent_id == current_feature_id:
+    if parent_id and parent_id == current_feature_id:
         raise HTTPException(status_code=400, detail="Feature cannot be its own parent")
     
     # Rule 2: Parent must exist (if provided)
@@ -59,10 +59,24 @@ async def create_feature(feature: FeatureCreate, db: AsyncSession = Depends(get_
         is_enabled=feature.is_enabled,
         parent_id=feature.parent_id
     )
+    # add to db
     db.add(db_feature)
     await db.commit()
-    await db.refresh(db_feature)
-    return db_feature
+
+    # Refresh the feature to load relationships (eagerly load children)
+    # this is to load refresh the 'db_feature' object. So it is required to fetch the latest from db
+    # This is required to fetch the auto-generated fields, for eg. 'id' and 'children'. So if not required, we can skip.
+    await db.refresh(db_feature, ["children"])
+    
+    # Convert SQLAlchemy model to Pydantic model
+    feature_response = Feature.model_validate(db_feature)
+    
+    # Denormalize names for response
+    feature_response.name = denormalize_name(db_feature.name)
+    for child in feature_response.children:
+        child.name = denormalize_name(child.name)
+    
+    return feature_response
 
 @router.get("/{feature_id}", response_model=Feature)
 async def read_feature(feature_id: int, db: AsyncSession = Depends(get_db)):
