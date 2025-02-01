@@ -107,5 +107,30 @@ async def update_feature(
         setattr(db_feature, key, value)
     
     await db.commit()
-    await db.refresh(db_feature)
-    return db_feature
+    
+    # Refresh the feature to load relationships (eagerly load children)
+    # this is to load refresh the 'db_feature' object. So it is required to fetch the latest from db
+    # This is required to fetch the auto-generated fields, for eg. 'id' and 'children'. So if not required, we can skip.
+    await db.refresh(db_feature, ["children"])
+
+    print("refresh done")
+    
+    # Convert SQLAlchemy model to Pydantic model
+    # first we need to set the children attribute of each children of db_feature to empty list
+    # as we know there couldn't be sub-children scenario
+    # for child in db_feature.children:
+    #     child: FeatureFlag
+    #     print("child type: ", type(child), child.name, child.__dict__)
+
+    # return Feature(id=1, name="test", is_enabled=False, parent_id=None, children=[])
+
+    feature_response = Feature.model_validate(db_feature)
+
+    print("mode validate done")
+    
+    # Denormalize names for response
+    feature_response.name = denormalize_name(db_feature.name)
+    for child in feature_response.children:
+        child.name = denormalize_name(child.name)
+    
+    return feature_response
