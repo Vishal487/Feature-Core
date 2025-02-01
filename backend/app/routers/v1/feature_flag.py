@@ -4,6 +4,7 @@ from app.database.session import get_db
 from app.database.models import FeatureFlag
 from app.routers.v1.schemas import FeatureCreate, Feature
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from app.utility.utils import normalize_name, denormalize_name
 
@@ -94,10 +95,28 @@ async def update_feature(
     feature_update: FeatureCreate, 
     db: AsyncSession = Depends(get_db)
 ):
-    # Fetch existing feature
-    db_feature = await db.get(FeatureFlag, feature_id)
+    # Fetch existing feature with children eagerly loaded
+    result = await db.execute(
+        select(FeatureFlag)
+        .options(selectinload(FeatureFlag.children).selectinload(FeatureFlag.children))  # Load nested children
+        .filter(FeatureFlag.id == feature_id)
+    )
+    db_feature = result.scalar()
+    
     if not db_feature:
         raise HTTPException(status_code=404, detail="Feature not found")
+    
+    # Check if a feature with the same name already exists, if name is being updated
+    new_normalized_name = normalize_name(feature_update.name)
+    if new_normalized_name != db_feature.name:
+        existing_feature = await db.execute(
+            select(FeatureFlag).filter(FeatureFlag.name == new_normalized_name)
+        )
+        if existing_feature.scalar():
+            raise HTTPException(
+                status_code=409,
+                detail="Feature with this name already exists"
+            )
 
     # Validate parent rules (include current_feature_id to check self-parenting)
     await validate_parent(db, feature_update.parent_id, current_feature_id=feature_id)
@@ -105,7 +124,19 @@ async def update_feature(
     # Update fields
     for key, value in feature_update.model_dump().items():
         setattr(db_feature, key, value)
+    db_feature.name = new_normalized_name
     
     await db.commit()
-    await db.refresh(db_feature)
-    return db_feature
+    
+    # Refresh the feature to load relationships (eagerly load children)
+    await db.refresh(db_feature, ["children"])
+    
+    # Convert SQLAlchemy model to Pydantic model
+    feature_response = Feature.model_validate(db_feature)
+    
+    # Denormalize names for response
+    feature_response.name = denormalize_name(db_feature.name)
+    for child in feature_response.children:
+        child.name = denormalize_name(child.name)
+    
+    return feature_response
