@@ -5,6 +5,8 @@ from app.database.models import FeatureFlag
 from app.routers.v1.schemas import FeatureCreate, Feature
 from sqlalchemy.future import select
 
+from app.utility.utils import normalize_name
+
 router = APIRouter()
 
 
@@ -35,11 +37,28 @@ async def get_children(db: AsyncSession, parent_id: int):
 
 @router.post("/", response_model=Feature)
 async def create_feature(feature: FeatureCreate, db: AsyncSession = Depends(get_db)):
+    # Normalize the feature name
+    normalized_name = normalize_name(feature.name)
+
+    # Check if a feature with the same name already exists
+    existing_feature = await db.execute(
+        select(FeatureFlag).filter(FeatureFlag.name == normalized_name)
+    )
+    if existing_feature.scalar():
+        raise HTTPException(
+            status_code=409,
+            detail="Feature with this name already exists"
+        )
+
     # Validate parent rules
     await validate_parent(db, feature.parent_id)
     
-    # Create feature
-    db_feature = FeatureFlag(**feature.model_dump())
+    # Create feature with normalized name
+    db_feature = FeatureFlag(
+        name=normalized_name,
+        is_enabled=feature.is_enabled,
+        parent_id=feature.parent_id
+    )
     db.add(db_feature)
     await db.commit()
     await db.refresh(db_feature)
