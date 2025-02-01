@@ -18,3 +18,6 @@ class Feature(FeatureBase):
 
 # For recursive relationships
 Feature.update_forward_refs()
+
+class AllFeaturesList(BaseModel):
+    features: Optional[List["Feature"]] = []
