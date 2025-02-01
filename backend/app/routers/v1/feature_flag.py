@@ -105,6 +105,18 @@ async def update_feature(
     
     if not db_feature:
         raise HTTPException(status_code=404, detail="Feature not found")
+    
+    # Check if a feature with the same name already exists, if name is being updated
+    new_normalized_name = normalize_name(feature_update.name)
+    if new_normalized_name != db_feature.name:
+        existing_feature = await db.execute(
+            select(FeatureFlag).filter(FeatureFlag.name == new_normalized_name)
+        )
+        if existing_feature.scalar():
+            raise HTTPException(
+                status_code=409,
+                detail="Feature with this name already exists"
+            )
 
     # Validate parent rules (include current_feature_id to check self-parenting)
     await validate_parent(db, feature_update.parent_id, current_feature_id=feature_id)
