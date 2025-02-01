@@ -31,9 +31,9 @@ async def validate_parent(db: AsyncSession, parent_id: int, current_feature_id: 
             )
 
 
-async def get_children(db: AsyncSession, parent_id: int):
-    result = await db.execute(select(FeatureFlag).filter(FeatureFlag.parent_id == parent_id))
-    return result.scalars().all()
+# async def get_children(db: AsyncSession, parent_id: int):
+#     result = await db.execute(select(FeatureFlag).filter(FeatureFlag.parent_id == parent_id))
+#     return result.scalars().all()
 
 
 @router.post("/", response_model=Feature)
@@ -80,14 +80,27 @@ async def create_feature(feature: FeatureCreate, db: AsyncSession = Depends(get_
     return feature_response
 
 @router.get("/{feature_id}", response_model=Feature)
-async def read_feature(feature_id: int, db: AsyncSession = Depends(get_db)):
-    feature = await db.get(FeatureFlag, feature_id)
-    if not feature:
+async def get_feature_details(feature_id: int, db: AsyncSession = Depends(get_db)):
+    # Fetch existing feature with children eagerly loaded
+    result = await db.execute(
+        select(FeatureFlag)
+        .options(selectinload(FeatureFlag.children).selectinload(FeatureFlag.children))  # Load nested children
+        .filter(FeatureFlag.id == feature_id)
+    )
+    db_feature = result.scalar()
+    
+    if not db_feature:
         raise HTTPException(status_code=404, detail="Feature not found")
     
-    # Get children recursively
-    feature.children = await get_children(db, feature_id)
-    return feature
+    # Convert SQLAlchemy model to Pydantic model
+    feature_response = Feature.model_validate(db_feature)
+    
+    # Denormalize names for response
+    feature_response.name = denormalize_name(db_feature.name)
+    for child in feature_response.children:
+        child.name = denormalize_name(child.name)
+    
+    return feature_response
 
 @router.put("/{feature_id}", response_model=Feature)
 async def update_feature(
