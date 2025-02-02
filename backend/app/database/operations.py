@@ -18,10 +18,17 @@ async def get_feature_by_name(db: AsyncSession, name: str):
     )
     return feature.scalar()
 
-async def get_feature_by_id(db: AsyncSession, id: int):
-    feature = await db.execute(
-        select(FeatureFlag).filter(FeatureFlag.id == id)
-    )
+async def get_feature_by_id(db: AsyncSession, feature_id: int, with_children: bool = False):
+    if with_children:
+        feature = await db.execute(
+            select(FeatureFlag)
+            .options(selectinload(FeatureFlag.children).selectinload(FeatureFlag.children))  # Load nested children
+            .filter(FeatureFlag.id == feature_id)
+        )
+    else:
+        feature = await db.execute(
+            select(FeatureFlag).filter(FeatureFlag.id == feature_id)
+        )
     return feature.scalar()
 
 async def add_feature(db: AsyncSession, db_feature: FeatureFlag):

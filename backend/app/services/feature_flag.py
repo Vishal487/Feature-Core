@@ -70,3 +70,16 @@ async def create_feature(db: AsyncSession, feature: FeatureCreate):
     except IntegrityError as e:
         await db.rollback()
         raise DBIntegrityError()
+
+async def get_feature_details(db: AsyncSession, feature_id: int):
+    db_feature = await get_feature_by_id(db, feature_id, with_children=True)
+    if not db_feature:
+        raise FeatureNotFoundException()
+    
+    # Convert SQLAlchemy model to Pydantic model
+    feature_response = Feature.model_validate(db_feature)
+
+    # Denormalize names for response
+    dernomalize_feature_and_children_names(feature_response)
+    
+    return feature_response
