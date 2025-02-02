@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.utility.utils import normalize_name, denormalize_name
 from app.utility.exceptions import DBIntegrityError, DuplicateFeatureNameException, FeatureNotFoundException, NestedChildException, SelfParentException
-from app.database.operations import add_feature, get_feature_by_id, get_feature_by_name
+from app.database.operations import add_feature, get_feature_by_id, get_feature_by_name, get_all_db_features
 
 
 async def validate_parent(db: AsyncSession, parent_id: int, db_feature_with_children: FeatureFlag = None):
@@ -134,4 +134,28 @@ async def update_feature(db: AsyncSession, feature_id: int, feature_update: Feat
     except IntegrityError as e:
         await db.rollback()
         raise DBIntegrityError()
-    
+
+
+async def get_all_features(db: AsyncSession):
+    # fetch all the parent features only, i.e. parent_id == null
+    # because we will anyway get all the children (because of use of selectinload)
+    # two advantages:
+    #   1. no duplicates. Child will only appear at 2nd level
+    #   2. we will get the child in nested manner which will be helpful
+
+    all_db_features = await get_all_db_features(db)
+
+    # Convert SQLAlchemy model to Pydantic model
+    # Denormalize names in the same loop
+    all_features_response = AllFeaturesList(features=[])
+    for db_feature in all_db_features:
+        feature_response = Feature.model_validate(db_feature)
+
+        # denormalize name for feature_response
+        dernomalize_feature_and_children_names(feature_response)
+
+        # add to the final response
+        all_features_response.features.append(feature_response)
+
+
+    return all_features_response

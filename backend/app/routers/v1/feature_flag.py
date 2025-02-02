@@ -67,32 +67,7 @@ async def update_feature(
 
 @router.get("", response_model=AllFeaturesList)
 async def get_all_features(db: AsyncSession = Depends(get_db)):
-    # fetch all the parent features only, i.e. parent_id == null
-    # because we will anyway get all the children (because of use of selectinload)
-    # two advantages:
-    #   1. no duplicates. Child will only appear at 2nd level
-    #   2. we will get the child in nested manner which will be helpful
-
-    result = await db.execute(
-        select(FeatureFlag)
-        .options(selectinload(FeatureFlag.children).selectinload(FeatureFlag.children))  # Load nested children
-        .filter(FeatureFlag.parent_id == None)
-    )
-    all_db_features = result.scalars()
-
-    # Convert SQLAlchemy model to Pydantic model
-    # Denormalize names in the same loop
-    all_features_response = AllFeaturesList(features=[])
-    for db_feature in all_db_features:
-        feature_response = Feature.model_validate(db_feature)
-
-        # denormalize name for feature_response
-        feature_response.name = denormalize_name(db_feature.name)
-        for child in feature_response.children:
-            child.name = denormalize_name(child.name)
-        
-        # add to the final response
-        all_features_response.features.append(feature_response)
-
-
-    return all_features_response
+    try:
+        return await feature_flag_svc.get_all_features(db)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")

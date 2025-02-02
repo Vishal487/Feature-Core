@@ -40,3 +40,17 @@ async def add_feature(db: AsyncSession, db_feature: FeatureFlag):
     # this is to refresh the 'db_feature' object. So it is required to fetch the latest from db.
     # This is required to fetch the auto-generated fields, for eg. 'id' and 'children'. So if not required, we can skip.
     await db.refresh(db_feature, ["children"])
+
+
+async def get_all_db_features(db: AsyncSession, flatten: bool = False):
+    if flatten:
+        result = await db.execute(select(FeatureFlag))
+    else:
+        result = await db.execute(
+            select(FeatureFlag)
+            .options(selectinload(FeatureFlag.children).selectinload(FeatureFlag.children))  # Load nested children
+            .filter(FeatureFlag.parent_id == None)
+        )
+
+    return result.scalars()
+
