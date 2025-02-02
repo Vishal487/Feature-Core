@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.utility.utils import normalize_name, denormalize_name
 from app.utility.exceptions import DBIntegrityError, DuplicateFeatureNameException, FeatureNotFoundException, NestedChildException, SelfParentException
+from app.database.operations import add_feature, get_feature_by_id, get_feature_by_name
 
 
 async def validate_parent(db: AsyncSession, parent_id: int, current_feature_id: int = None):
@@ -18,7 +19,7 @@ async def validate_parent(db: AsyncSession, parent_id: int, current_feature_id: 
     
     # Rule 2: Parent must exist (if provided)
     if parent_id is not None:
-        parent = await db.get(FeatureFlag, parent_id)
+        parent = await get_feature_by_id(db, parent_id)
         if not parent:
             raise FeatureNotFoundException()
         
@@ -28,10 +29,8 @@ async def validate_parent(db: AsyncSession, parent_id: int, current_feature_id: 
 
 async def check_feature_name_exists(db: AsyncSession, name: str):
     # Check if a feature with the same name already exists
-    existing_feature = await db.execute(
-        select(FeatureFlag).filter(FeatureFlag.name == name)
-    )
-    if existing_feature.scalar():
+    existing_feature = await get_feature_by_name(db, name)
+    if existing_feature:
         return True
     return False
 
@@ -59,15 +58,7 @@ async def create_feature(db: AsyncSession, feature: FeatureCreate):
             is_enabled=feature.is_enabled,
             parent_id=feature.parent_id
         )
-            
-        # add to db
-        db.add(db_feature)
-        await db.commit()
-
-        # Refresh the feature to load relationships (eagerly load children)
-        # this is to load refresh the 'db_feature' object. So it is required to fetch the latest from db
-        # This is required to fetch the auto-generated fields, for eg. 'id' and 'children'. So if not required, we can skip.
-        await db.refresh(db_feature, ["children"])
+        await add_feature(db, db_feature)
 
         # Convert SQLAlchemy model to Pydantic model
         feature_response = Feature.model_validate(db_feature)
