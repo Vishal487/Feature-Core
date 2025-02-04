@@ -42,5 +42,5 @@ async def get_all_db_features(db: AsyncSession, flatten: bool = False):
             .filter(FeatureFlag.parent_id == None)
         )
 
-    return result.scalars()
+    return result.scalars().all()
 
