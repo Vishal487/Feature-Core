@@ -1,17 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_db
-from app.database.models import FeatureFlag
 from app.routers.v1.schemas import AllFeaturesList, FeatureCreate, Feature
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
-from sqlalchemy.exc import IntegrityError
 
-from app.utility.utils import normalize_name, denormalize_name
 from app.services import feature_flag as feature_flag_svc
 from app.utility.exceptions import DuplicateFeatureNameException, FeatureNotFoundException, NestedChildException, SelfParentException
 
 router = APIRouter()
+
+# Common function to handle exceptions
+def handle_exceptions(exception):
+    exception_map = {
+        DuplicateFeatureNameException: (409, "Feature with this name already exists"),
+        SelfParentException: (400, "Feature cannot be its own parent"),
+        FeatureNotFoundException: (404, "Feature or parent feature not found"),
+        NestedChildException: (400, "Only one-level relationships allowed)")
+    }
+    status_code, detail = exception_map.get(type(exception), (500, "Internal server error"))
+    raise HTTPException(status_code=status_code, detail=detail)
 
 
 @router.post("/", response_model=Feature)

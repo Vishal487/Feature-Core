@@ -1,10 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database.session import get_db
 from app.database.models import FeatureFlag
 from app.routers.v1.schemas import AllFeaturesList, FeatureCreate, Feature
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 
 from app.utility.utils import normalize_name, denormalize_name
@@ -30,7 +26,6 @@ async def validate_parent(db: AsyncSession, parent_id: int, db_feature_with_chil
     # Rule 4: current feature should not be a parent of any other feature. Basically it shouldn't have any child
     if parent_id and db_feature_with_children and db_feature_with_children.children:
         raise NestedChildException()
-        
 
 async def check_feature_name_exists(db: AsyncSession, name: str):
     # Check if a feature with the same name already exists
@@ -89,7 +84,6 @@ async def get_feature_details(db: AsyncSession, feature_id: int):
     
     return feature_response
 
-
 async def update_feature(db: AsyncSession, feature_id: int, feature_update: FeatureCreate):
     try:   
         db_feature = await get_feature_by_id(db, feature_id, with_children=True)
@@ -135,7 +129,6 @@ async def update_feature(db: AsyncSession, feature_id: int, feature_update: Feat
         await db.rollback()
         raise DBIntegrityError()
 
-
 async def get_all_features(db: AsyncSession):
     # fetch all the parent features only, i.e. parent_id == null
     # because we will anyway get all the children (because of use of selectinload)
@@ -156,6 +149,5 @@ async def get_all_features(db: AsyncSession):
 
         # add to the final response
         all_features_response.features.append(feature_response)
-
 
     return all_features_response

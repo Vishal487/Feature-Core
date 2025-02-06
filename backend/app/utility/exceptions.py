@@ -1,5 +1,3 @@
-
-
 class DuplicateFeatureNameException(Exception):
     # raised when feature name already exists in db
     pass
