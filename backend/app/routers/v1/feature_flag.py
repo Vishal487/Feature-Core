@@ -8,6 +8,17 @@ from app.utility.exceptions import DuplicateFeatureNameException, FeatureNotFoun
 
 router = APIRouter()
 
+# Common function to handle exceptions
+def handle_exceptions(exception):
+    exception_map = {
+        DuplicateFeatureNameException: (409, "Feature with this name already exists"),
+        SelfParentException: (400, "Feature cannot be its own parent"),
+        FeatureNotFoundException: (404, "Feature or parent feature not found"),
+        NestedChildException: (400, "Only one-level relationships allowed)")
+    }
+    status_code, detail = exception_map.get(type(exception), (500, "Internal server error"))
+    raise HTTPException(status_code=status_code, detail=detail)
+
 
 @router.post("/", response_model=Feature)
 async def create_feature(feature: FeatureCreate, db: AsyncSession = Depends(get_db)):
