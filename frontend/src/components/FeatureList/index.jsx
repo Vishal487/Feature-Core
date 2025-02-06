@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, CircularProgress, Box } from '@mui/material';
-import { getFeatures } from '../../services/api';
+import { getFeatures, updateFeature } from '../../services/api'; // Add updateFeature here
 import FeatureItem from './FeatureItem';
 import CreateFeatureModal from '../CreateFeatureModal';
 
@@ -43,7 +43,7 @@ const FeatureList = () => {
           feature={feature}
           onSave={async (id, data) => {
             try {
-              await updateFeature(id, data);
+              await updateFeature(id, data); // Now updateFeature is defined
               loadFeatures();
             } catch (error) {
               console.error('Update failed:', error);
