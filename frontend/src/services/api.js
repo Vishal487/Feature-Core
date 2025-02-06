@@ -1,9 +1,20 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api/v1', // Your FastAPI backend URL
+  baseURL: 'http://localhost:8000/api/v1',
 });
 
-export const getFeatures = () => API.get('/features');
-export const createFeature = (data) => API.post('/features/', data);
-export const updateFeature = (id, data) => API.put(`/features/${id}`, data);
+export const fetchAllFeatures = async () => {
+  const response = await API.get('/features');
+  return response.data;
+};
+
+export const updateFeature = async (featureId, payload) => {
+  const response = await API.put(`/features/${featureId}`, payload);
+  return response.data;
+};
+
+export const createFeature = async (payload) => {
+  const response = await API.post('/features/', payload);
+  return response.data;
+};
