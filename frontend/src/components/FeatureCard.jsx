@@ -72,6 +72,7 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange }) => {
               onChange={handleNameChange} 
               variant="standard" 
               fullWidth 
+              required
             />
           </Grid>
 
@@ -82,7 +83,7 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange }) => {
 
           {/* Save Button */}
           <Grid item>
-            <Button variant="contained" onClick={handleSave} disabled={!hasChanges}>
+            <Button variant="contained" onClick={handleSave} disabled={!hasChanges || !localFeature.name}>
               Save
             </Button>
           </Grid>
