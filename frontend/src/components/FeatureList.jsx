@@ -1,13 +1,59 @@
-import React from 'react';
-import { Grid, Fab } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import FeatureCard from './FeatureCard';
+import React, { useState } from "react";
+import { Grid, Fab, TextField, Box } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import FeatureCard from "./FeatureCard";
 
-const FeatureList = ({ features, onSaveFeature, onToggleChange, onNameChange, onCreateFeature }) => {
+const FeatureList = ({
+  features,
+  onSaveFeature,
+  onToggleChange,
+  onNameChange,
+  onCreateFeature,
+}) => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredFeatures = features.filter((feature) =>
+    feature.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div style={{ position: 'relative', padding: '1rem' }}>
+    <Box style={{ position: "relative", padding: "1rem" }}>
+      {/* Search Input */}
+      <Box
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1rem",
+        }}
+      >
+        <TextField
+          variant="outlined"
+          size="small"
+          label="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            maxWidth: "300px",
+            alignSelf: "flex-start",
+          }}
+        />
+        {/* Add Button */}
+        <Fab
+          color="primary"
+          aria-label="add"
+          onClick={onCreateFeature}
+          style={{
+            position: "relative",
+            alignSelf: "flex-end",
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      </Box>
+      {/* Feature Cards */}
       <Grid container spacing={2}>
-        {features.map(feature => (
+        {filteredFeatures.map((feature) => (
           <Grid item xs={12} key={feature.id}>
             <FeatureCard
               feature={feature}
@@ -18,10 +64,7 @@ const FeatureList = ({ features, onSaveFeature, onToggleChange, onNameChange, on
           </Grid>
         ))}
       </Grid>
-      <Fab color="primary" aria-label="add" style={{ position: 'fixed', top: '1rem', right: '1rem' }} onClick={onCreateFeature}>
-        <AddIcon />
-      </Fab>
-    </div>
+    </Box>
   );
 };
 
