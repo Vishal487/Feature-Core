@@ -149,5 +149,12 @@ async def get_all_features(db: AsyncSession):
 
         # add to the final response
         all_features_response.features.append(feature_response)
+    
+    # sort by name
+    all_features_response.features.sort(key = lambda feat: feat.name)
+    # sort children
+    for feature in all_features_response.features:
+        if feature.children:
+            feature.children.sort(key = lambda feat: feat.name)
 
     return all_features_response
