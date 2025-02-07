@@ -24,7 +24,6 @@ const FeatureModal = ({ open, onClose, onCreated }) => {
     const loadTopLevelFeatures = async () => {
       try {
         const data = await fetchAllFeatures();
-        // Filter top-level features (those with no parent)
         const topFeatures = data.features.filter(feature => feature.parent_id === null);
         setTopLevelFeatures(topFeatures);
       } catch (err) {
@@ -41,7 +40,6 @@ const FeatureModal = ({ open, onClose, onCreated }) => {
       const newFeature = await createFeature(payload);
       onCreated(newFeature);
       onClose();
-      // Reset form values
       setName('');
       setIsEnabled(false);
       setParentId('');

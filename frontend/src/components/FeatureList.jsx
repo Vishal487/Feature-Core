@@ -9,7 +9,12 @@ const FeatureList = ({ features, onSaveFeature, onToggleChange, onNameChange, on
       <Grid container spacing={2}>
         {features.map(feature => (
           <Grid item xs={12} key={feature.id}>
-            <FeatureCard feature={feature} onSave={onSaveFeature} onToggleChange={onToggleChange} onNameChange={onNameChange} />
+            <FeatureCard
+              feature={feature}
+              onSave={onSaveFeature}
+              onToggleChange={onToggleChange}
+              onNameChange={onNameChange}
+            />
           </Grid>
         ))}
       </Grid>

@@ -8,7 +8,6 @@ const App = () => {
   const [features, setFeatures] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Load all features on component mount or refresh
   const loadFeatures = async () => {
     try {
       const data = await fetchAllFeatures();
@@ -24,35 +23,29 @@ const App = () => {
 
   const handleSaveFeature = async (feature) => {
     try {
-      // Prepare payload from feature object and call update API
-      const payload = {
-        name: feature.name,
-        is_enabled: feature.is_enabled,
-        parent_id: feature.parent_id,
-      };
-      const updatedFeature = await updateFeature(feature.id, payload);
-      // Refresh the features list after save
-      loadFeatures();
+      await updateFeature(feature.id, feature);
+      loadFeatures(); // Ensure UI updates correctly
     } catch (err) {
       console.error(err);
-      // Optionally show an error message
     }
   };
 
-  const handleToggleChange = (featureId, newStatus) => {
-    // Update local state immediately for responsive UI
-    setFeatures((prevFeatures) =>
-      prevFeatures.map((feature) =>
-        feature.id === featureId ? { ...feature, is_enabled: newStatus } : feature
-      )
-    );
+  const handleToggleChange = async (featureId, newValue) => {
+    try {
+      const updatedFeatures = features.map(f =>
+        f.id === featureId ? { ...f, is_enabled: newValue } : f
+      );
+      setFeatures(updatedFeatures);
+      // await updateFeature(featureId, { is_enabled: newValue });
+      // loadFeatures(); // Ensure correct state
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleNameChange = (featureId, newName) => {
-    setFeatures((prevFeatures) =>
-      prevFeatures.map((feature) =>
-        feature.id === featureId ? { ...feature, name: newName } : feature
-      )
+    setFeatures(prevFeatures =>
+      prevFeatures.map(f => (f.id === featureId ? { ...f, name: newName } : f))
     );
   };
 
@@ -60,8 +53,7 @@ const App = () => {
     setModalOpen(true);
   };
 
-  const handleFeatureCreated = (newFeature) => {
-    // Optionally add the new feature locally or simply reload the list
+  const handleFeatureCreated = () => {
     loadFeatures();
   };
 
