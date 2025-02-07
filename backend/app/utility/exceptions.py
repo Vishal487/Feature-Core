@@ -17,3 +17,7 @@ class NestedChildException(Exception):
 class DBIntegrityError(Exception):
     # raised when we get IntegrityError exception from database
     pass
+
+class NameLengthLimitException(Exception):
+    # raised when name length is not within limit
+    pass
