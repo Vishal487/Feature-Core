@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Switch, IconButton, TextField, Button, Collapse } from '@mui/material';
+import { Card, CardContent, Switch, IconButton, TextField, Button, Collapse, Grid } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import WarningDialog from './WarningDialog';
 
@@ -52,22 +52,59 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange }) => {
   return (
     <Card variant="outlined" sx={{ margin: '1rem' }}>
       <CardContent>
-        <TextField label="Feature Name" value={localFeature.name} onChange={handleNameChange} variant="standard" fullWidth />
-        <Switch checked={localFeature.is_enabled} onChange={handleToggle} />
-        {feature.children && feature.children.length > 0 && (
-          <IconButton onClick={() => setExpanded(!expanded)}>
-            <ExpandMoreIcon />
-          </IconButton>
-        )}
-        <Button variant="contained" onClick={handleSave} disabled={!hasChanges}>Save</Button>
+        <Grid container alignItems="center" spacing={2}>
+          {/* Expand Button (or empty space if not present) */}
+          <Grid item>
+            {feature.children && feature.children.length > 0 ? (
+              <IconButton onClick={() => setExpanded(!expanded)}>
+                <ExpandMoreIcon />
+              </IconButton>
+            ) : (
+              <div style={{ width: '40px' }}></div> // Empty space for alignment
+            )}
+          </Grid>
+
+          {/* Feature Name Input */}
+          <Grid item xs>
+            <TextField 
+              label="Feature Name" 
+              value={localFeature.name} 
+              onChange={handleNameChange} 
+              variant="standard" 
+              fullWidth 
+            />
+          </Grid>
+
+          {/* Toggle Button */}
+          <Grid item>
+            <Switch checked={localFeature.is_enabled} onChange={handleToggle} />
+          </Grid>
+
+          {/* Save Button */}
+          <Grid item>
+            <Button variant="contained" onClick={handleSave} disabled={!hasChanges}>
+              Save
+            </Button>
+          </Grid>
+        </Grid>
       </CardContent>
+
+      {/* Collapsible Children */}
       {feature.children && feature.children.length > 0 && (
         <Collapse in={expanded}>
           {feature.children.map(child => (
-            <FeatureCard key={child.id} feature={child} onSave={onSave} onToggleChange={onToggleChange} onNameChange={onNameChange} />
+            <FeatureCard 
+              key={child.id} 
+              feature={child} 
+              onSave={onSave} 
+              onToggleChange={onToggleChange} 
+              onNameChange={onNameChange} 
+            />
           ))}
         </Collapse>
       )}
+
+      {/* Warning Dialog */}
       <WarningDialog open={warningOpen} onConfirm={handleConfirmWarning} onCancel={handleCancelWarning} message="Toggling this feature will affect all child features. Do you want to proceed?" />
     </Card>
   );
