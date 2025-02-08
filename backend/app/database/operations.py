@@ -48,7 +48,11 @@ async def get_all_db_features(db: AsyncSession, flatten: bool = False):
     return result.scalars().all()
 
 async def delete_db_feature(db: AsyncSession, feature_id: int):
-    res = await db.execute(delete(FeatureFlag).filter(FeatureFlag.id == feature_id))
-    if res.rowcount == 0:
-        raise FeatureNotFoundException()
-    await db.commit()
+    try:
+        res = await db.execute(delete(FeatureFlag).filter(FeatureFlag.id == feature_id))
+        if res.rowcount == 0:
+            raise FeatureNotFoundException()
+        await db.commit()
+    except Exception as exc:
+        await db.rollback()
+        raise exc
