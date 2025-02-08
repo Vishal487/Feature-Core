@@ -13,8 +13,13 @@ const FeatureList = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredFeatures = features.filter((feature) =>
-    feature.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFeatures = features.filter(
+    (feature) =>
+      feature.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (feature.children &&
+        feature.children.some((child) =>
+          child.name.toLowerCase().includes(searchQuery.toLowerCase())
+        ))
   );
 
   return (
