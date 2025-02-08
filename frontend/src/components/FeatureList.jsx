@@ -9,6 +9,7 @@ const FeatureList = ({
   onToggleChange,
   onNameChange,
   onCreateFeature,
+  onDelete
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -60,6 +61,7 @@ const FeatureList = ({
               onSave={onSaveFeature}
               onToggleChange={onToggleChange}
               onNameChange={onNameChange}
+              onDelete={onDelete}
             />
           </Grid>
         ))}

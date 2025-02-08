@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Typography, Snackbar, Alert } from '@mui/material';
 import FeatureList from './components/FeatureList';
 import FeatureModal from './components/FeatureModal';
-import { fetchAllFeatures, updateFeature } from './services/api';
+import { fetchAllFeatures, updateFeature, deleteFeature } from './services/api';
 
 const App = () => {
   const [features, setFeatures] = useState([]);
@@ -31,6 +31,17 @@ const App = () => {
     } catch (err) {
       // console.error(err);
       showErrorSnackbar('Failed to save feature.');
+    }
+  };
+
+  const handleDeleteFeature = async (featureId) => {
+    try {
+      await deleteFeature(featureId);
+      // Reload or update features list after deletion
+      loadFeatures();
+    } catch (err) {
+      // console.error("Failed to delete feature:", err);
+      showErrorSnackbar('Failed to delete feature.');
     }
   };
 
@@ -83,6 +94,7 @@ const App = () => {
         onToggleChange={handleToggleChange}
         onNameChange={handleNameChange}
         onCreateFeature={handleCreateFeature}
+        onDelete={handleDeleteFeature}
       />
       <FeatureModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={handleFeatureCreated} />
 

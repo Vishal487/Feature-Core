@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Switch, IconButton, TextField, Button, Collapse, Grid } from '@mui/material';
+import { Card, CardContent, Switch, IconButton, TextField, Button, Collapse, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DeleteIcon from '@mui/icons-material/Delete';
 import WarningDialog from './WarningDialog';
 
-const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange }) => {
+const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
   const [localFeature, setLocalFeature] = useState(feature);
   const [warningOpen, setWarningOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -49,6 +51,19 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange }) => {
     setHasChanges(false);
   };
 
+  const handleDelete = () => {
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleteConfirmOpen(false);
+    onDelete && (await onDelete(localFeature.id)); // Call delete handler
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmOpen(false);
+  };
+
   return (
     <Card variant="outlined" sx={{ margin: '1rem' }}>
       <CardContent>
@@ -87,6 +102,13 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange }) => {
               Save
             </Button>
           </Grid>
+
+          {/* Delete Button */}
+          <Grid item>
+            <IconButton color="error" onClick={handleDelete}>
+              <DeleteIcon />
+            </IconButton>
+          </Grid>
         </Grid>
       </CardContent>
 
@@ -100,6 +122,7 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange }) => {
               onSave={onSave} 
               onToggleChange={onToggleChange} 
               onNameChange={onNameChange} 
+              onDelete={onDelete} 
             />
           ))}
         </Collapse>
@@ -107,6 +130,18 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange }) => {
 
       {/* Warning Dialog */}
       <WarningDialog open={warningOpen} onConfirm={handleConfirmWarning} onCancel={handleCancelWarning} message="Toggling this feature will affect all child features. Do you want to proceed?" />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onClose={handleCancelDelete}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>Are you sure you want to delete this feature? This action cannot be undone.</DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 };
