@@ -18,3 +18,8 @@ export const createFeature = async (payload) => {
   const response = await API.post('/features/', payload);
   return response.data;
 };
+
+export const deleteFeature = async (featureId) => {
+  const response = await API.delete(`/features/${featureId}`);
+  return response.data;
+};

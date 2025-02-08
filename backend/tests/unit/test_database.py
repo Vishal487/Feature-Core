@@ -3,11 +3,16 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import FeatureFlag
 from app.database.operations import (
+    delete_db_feature,
     get_feature_by_name,
     get_feature_by_id,
     add_feature,
     get_all_db_features
 )
+from sqlalchemy.exc import IntegrityError
+
+from app.utility.exceptions import FeatureNotFoundException
+
 
 @pytest.mark.asyncio
 async def test_get_feature_by_name_not_found(db_session: AsyncSession):
@@ -65,4 +70,26 @@ async def test_get_all_db_features(db_session: AsyncSession):
     result = await get_all_db_features(db_session)
     assert len(result) == 1  # Only parent returned
     assert len(result[0].children) == 1
+
+@pytest.mark.asyncio
+async def test_delete_db_feature(db_session: AsyncSession):
+    # Clear the database
+    await db_session.execute(text("TRUNCATE TABLE feature_flags RESTART IDENTITY CASCADE"))
+    await db_session.commit()
+
+    # Prepare test data
+    parent = FeatureFlag(id=1, name="parent", is_enabled=True)
+    child = FeatureFlag(id=2, name="child", is_enabled=True, parent=parent)
+    db_session.add_all([parent, child])
+    await db_session.commit()
+    
+    # Test
+    with pytest.raises(FeatureNotFoundException):
+        await delete_db_feature(db_session, feature_id=3)  # id=3 feature doesn't exists
+
+    with pytest.raises(IntegrityError):
+        await delete_db_feature(db_session, feature_id=1)  # id=1 is a parent, hence can't delete
+    
+    await delete_db_feature(db_session, feature_id=2)  # id=2 can be deleted safely
+    await delete_db_feature(db_session, feature_id=1)  # now id=1 is no more parent since id=2 is deleted
     

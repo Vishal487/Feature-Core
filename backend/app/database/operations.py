@@ -1,7 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import FeatureFlag
 from sqlalchemy.future import select
+from sqlalchemy import delete
 from sqlalchemy.orm import selectinload
+
+from app.utility.exceptions import FeatureNotFoundException
 
 async def get_feature_by_name(db: AsyncSession, name: str):
     feature = await db.execute(
@@ -44,3 +47,12 @@ async def get_all_db_features(db: AsyncSession, flatten: bool = False):
 
     return result.scalars().all()
 
+async def delete_db_feature(db: AsyncSession, feature_id: int):
+    try:
+        res = await db.execute(delete(FeatureFlag).filter(FeatureFlag.id == feature_id))
+        if res.rowcount == 0:
+            raise FeatureNotFoundException()
+        await db.commit()
+    except Exception as exc:
+        await db.rollback()
+        raise exc

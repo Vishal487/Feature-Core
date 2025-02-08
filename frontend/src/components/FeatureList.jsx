@@ -9,11 +9,17 @@ const FeatureList = ({
   onToggleChange,
   onNameChange,
   onCreateFeature,
+  onDelete
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredFeatures = features.filter((feature) =>
-    feature.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFeatures = features.filter(
+    (feature) =>
+      feature.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (feature.children &&
+        feature.children.some((child) =>
+          child.name.toLowerCase().includes(searchQuery.toLowerCase())
+        ))
   );
 
   return (
@@ -60,6 +66,7 @@ const FeatureList = ({
               onSave={onSaveFeature}
               onToggleChange={onToggleChange}
               onNameChange={onNameChange}
+              onDelete={onDelete}
             />
           </Grid>
         ))}

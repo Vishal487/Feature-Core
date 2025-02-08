@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.services import feature_flag as feature_flag_svc
 from app.routers.v1.schemas import FeatureCreate
 from app.utility.exceptions import (
+    DeletingParentFeature,
     DuplicateFeatureNameException,
     SelfParentException,
     FeatureNotFoundException,
@@ -16,6 +17,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 
 # Import your service functions and exceptions
 from app.services.feature_flag import (
+    delete_feature,
     validate_parent,
     check_feature_name_exists,
     dernomalize_feature_and_children_names,
@@ -317,3 +319,34 @@ class TestGetAllFeatures:
         assert len(result.features) == 1
         assert result.features[0].id == 1
         assert result.features[0].name == "Test Feature"
+
+# ------------------------------------------------------------
+# Test class for delete_feature
+# ------------------------------------------------------------
+class TestDeleteFeature:
+    @pytest.mark.asyncio
+    async def test_delete_feature_not_exists(self, monkeypatch, db_session: AsyncMock):
+        # Patch delete_db_feature to raise FeatureNotFoundException exception
+        async def fake_delete_db_feature(db, feature_id):
+            raise FeatureNotFoundException()
+        monkeypatch.setattr("app.services.feature_flag.delete_db_feature", fake_delete_db_feature)
+        with pytest.raises(FeatureNotFoundException):
+            await delete_feature(db_session, 1)
+    
+
+    @pytest.mark.asyncio
+    async def test_delete_feature_parent_feature(self, monkeypatch, db_session: AsyncMock):
+        # Patch delete_db_feature to raise IntegrityError exception
+        async def fake_delete_db_feature(db, feature_id):
+            from sqlalchemy.exc import IntegrityError
+            raise IntegrityError("error", None, None)
+        monkeypatch.setattr("app.services.feature_flag.delete_db_feature", fake_delete_db_feature)
+        with pytest.raises(DeletingParentFeature):
+            await delete_feature(db_session, 2)
+
+
+    @pytest.mark.asyncio
+    async def test_delete_feature_success(self, monkeypatch, db_session: AsyncMock):
+        # Patch delete_db_feature to return null
+        monkeypatch.setattr("app.services.feature_flag.delete_db_feature", AsyncMock(return_value=[]))
+        await delete_feature(db_session, 3)

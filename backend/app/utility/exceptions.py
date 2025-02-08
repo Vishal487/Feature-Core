@@ -21,3 +21,7 @@ class DBIntegrityError(Exception):
 class NameLengthLimitException(Exception):
     # raised when name length is not within limit
     pass
+
+class DeletingParentFeature(Exception):
+    # raised when deleting a parent feature
+    pass
