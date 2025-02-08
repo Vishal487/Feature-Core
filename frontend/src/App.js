@@ -3,6 +3,7 @@ import { Container, Typography, Snackbar, Alert } from '@mui/material';
 import FeatureList from './components/FeatureList';
 import FeatureModal from './components/FeatureModal';
 import { fetchAllFeatures, updateFeature, deleteFeature } from './services/api';
+import logo from './assets/logo.png';
 
 const App = () => {
   const [features, setFeatures] = useState([]);
@@ -85,6 +86,12 @@ const App = () => {
 
   return (
     <Container>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: "20px" }}>
+        <img src={logo} alt="Feature-Core Logo" width="150" style={{ marginRight: "10px" }} />
+        {/* <Typography variant="h4" align="center">
+          Feature Flags
+        </Typography> */}
+      </div>
       <Typography variant="h4" align="center" sx={{ mt: 4, mb: 2 }}>
         Feature Flags
       </Typography>
