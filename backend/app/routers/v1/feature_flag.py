@@ -4,7 +4,7 @@ from app.database.session import get_db
 from app.routers.v1.schemas import AllFeaturesList, FeatureCreate, Feature
 
 from app.services import feature_flag as feature_flag_svc
-from app.utility.exceptions import DuplicateFeatureNameException, FeatureNotFoundException, NameLengthLimitException, NestedChildException, SelfParentException
+from app.utility.exceptions import DeletingParentFeature, DuplicateFeatureNameException, FeatureNotFoundException, NameLengthLimitException, NestedChildException, SelfParentException
 
 router = APIRouter()
 
@@ -81,3 +81,16 @@ async def get_all_features(db: AsyncSession = Depends(get_db)):
         return await feature_flag_svc.get_all_features(db)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/{feature_id}")
+async def delete_feature(feature_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        await feature_flag_svc.delete_feature(db, feature_id)
+    except FeatureNotFoundException:
+        raise HTTPException(status_code=404, detail="Feature not found") 
+    except DeletingParentFeature:
+        raise HTTPException(status_code=400, detail="Parent feature can't be deleted") 
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="Internal server error")
+        

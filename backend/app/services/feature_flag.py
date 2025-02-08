@@ -4,8 +4,8 @@ from app.routers.v1.schemas import AllFeaturesList, FeatureCreate, Feature
 from sqlalchemy.exc import IntegrityError
 
 from app.utility.utils import normalize_name, denormalize_name
-from app.utility.exceptions import DBIntegrityError, DuplicateFeatureNameException, FeatureNotFoundException, NameLengthLimitException, NestedChildException, SelfParentException
-from app.database.operations import add_feature, get_feature_by_id, get_feature_by_name, get_all_db_features
+from app.utility.exceptions import DBIntegrityError, DeletingParentFeature, DuplicateFeatureNameException, FeatureNotFoundException, NameLengthLimitException, NestedChildException, SelfParentException
+from app.database.operations import add_feature, delete_db_feature, get_feature_by_id, get_feature_by_name, get_all_db_features
 from app.services.constants import FEATURE_NAME_LOWER_LIMIT, FEATURE_NAME_UPPER_LIMIT
 
 
@@ -169,3 +169,22 @@ async def get_all_features(db: AsyncSession):
             feature.children.sort(key = lambda feat: feat.name)
 
     return all_features_response
+
+
+async def delete_feature(db: AsyncSession, feature_id: int):
+    # check if feature exists
+    # db_feature = await get_feature_by_id(db, feature_id, with_children=True)
+    # if not db_feature:
+    #     raise FeatureNotFoundException()
+    
+    # check if feature has some children
+    # if db_feature.children:
+    #     raise DeletingParentFeature()
+
+    # Just one db call now
+    
+    # now delete
+    try:
+        await delete_db_feature(db, feature_id)
+    except IntegrityError as e: # will be raised when we try to delete a parent feature (because of foreign contraint on the same table)
+        raise DeletingParentFeature()
