@@ -51,7 +51,7 @@ const FeatureModal = ({ open, onClose, onCreated }) => {
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={modalStyle}>
-        <TextField label="Feature Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth margin="normal" />
+        <TextField required label="Feature Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth margin="normal" />
         <FormControlLabel control={<Switch checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} />} label="Enabled" />
         <TextField label="Parent Feature" select fullWidth margin="normal" value={parentId} onChange={(e) => setParentId(e.target.value)}>
           <MenuItem value="">None</MenuItem>
@@ -62,7 +62,7 @@ const FeatureModal = ({ open, onClose, onCreated }) => {
         {error && <Box sx={{ color: 'red', my: 1 }}>{error}</Box>}
         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
           <Button onClick={onClose} sx={{ mr: 1 }}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>Save</Button>
+          <Button disabled={!name.trim()} variant="contained" onClick={handleSubmit}>Save</Button>
         </Box>
       </Box>
     </Modal>

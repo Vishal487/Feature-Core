@@ -4,8 +4,9 @@ from app.routers.v1.schemas import AllFeaturesList, FeatureCreate, Feature
 from sqlalchemy.exc import IntegrityError
 
 from app.utility.utils import normalize_name, denormalize_name
-from app.utility.exceptions import DBIntegrityError, DuplicateFeatureNameException, FeatureNotFoundException, NestedChildException, SelfParentException
+from app.utility.exceptions import DBIntegrityError, DuplicateFeatureNameException, FeatureNotFoundException, NameLengthLimitException, NestedChildException, SelfParentException
 from app.database.operations import add_feature, get_feature_by_id, get_feature_by_name, get_all_db_features
+from app.services.constants import FEATURE_NAME_LOWER_LIMIT, FEATURE_NAME_UPPER_LIMIT
 
 
 async def validate_parent(db: AsyncSession, parent_id: int, db_feature_with_children: FeatureFlag = None):
@@ -42,6 +43,11 @@ def dernomalize_feature_and_children_names(feature: Feature):
 
 async def create_feature(db: AsyncSession, feature: FeatureCreate):
     try:
+        if feature.name:
+            feature.name = feature.name.strip()
+        if (not feature.name) or (len(feature.name) < FEATURE_NAME_LOWER_LIMIT or len(feature.name) > FEATURE_NAME_UPPER_LIMIT):
+            raise NameLengthLimitException()
+        
         # Normalize the feature name
         normalized_name = normalize_name(feature.name)
 
@@ -85,7 +91,12 @@ async def get_feature_details(db: AsyncSession, feature_id: int):
     return feature_response
 
 async def update_feature(db: AsyncSession, feature_id: int, feature_update: FeatureCreate):
-    try:   
+    try:
+        if feature_update.name:
+            feature_update.name = feature_update.name.strip()
+        if (not feature_update.name) or (len(feature_update.name) < FEATURE_NAME_LOWER_LIMIT or len(feature_update.name) > FEATURE_NAME_UPPER_LIMIT):
+            raise NameLengthLimitException()
+        
         db_feature = await get_feature_by_id(db, feature_id, with_children=True)
         if not db_feature:
             raise FeatureNotFoundException()
@@ -149,5 +160,12 @@ async def get_all_features(db: AsyncSession):
 
         # add to the final response
         all_features_response.features.append(feature_response)
+    
+    # sort by name
+    all_features_response.features.sort(key = lambda feat: feat.name)
+    # sort children
+    for feature in all_features_response.features:
+        if feature.children:
+            feature.children.sort(key = lambda feat: feat.name)
 
     return all_features_response

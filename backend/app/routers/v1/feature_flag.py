@@ -4,7 +4,7 @@ from app.database.session import get_db
 from app.routers.v1.schemas import AllFeaturesList, FeatureCreate, Feature
 
 from app.services import feature_flag as feature_flag_svc
-from app.utility.exceptions import DuplicateFeatureNameException, FeatureNotFoundException, NestedChildException, SelfParentException
+from app.utility.exceptions import DuplicateFeatureNameException, FeatureNotFoundException, NameLengthLimitException, NestedChildException, SelfParentException
 
 router = APIRouter()
 
@@ -25,6 +25,8 @@ async def create_feature(feature: FeatureCreate, db: AsyncSession = Depends(get_
     try:
         feature_response = await feature_flag_svc.create_feature(db, feature)
         return feature_response
+    except NameLengthLimitException:
+        raise HTTPException(status_code=400, detail="Feature name is not within limit")
     except DuplicateFeatureNameException:
         raise HTTPException(
                 status_code=409,
@@ -60,6 +62,8 @@ async def update_feature(
 ):
     try:
         return await feature_flag_svc.update_feature(db, feature_id, feature_update)
+    except NameLengthLimitException:
+        raise HTTPException(status_code=400, detail="Feature name is not within limit")
     except DuplicateFeatureNameException:
         raise HTTPException(status_code=409, detail="Feature with this name already exists")
     except SelfParentException:
