@@ -22,7 +22,7 @@ const App = () => {
 
   useEffect(() => {
     loadFeatures();
-  });
+  }, []);
 
   const handleSaveFeature = async (feature) => {
     try {
