@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api/v1',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1', // Fallback to localhost if env var is not set
 });
 
 export const fetchAllFeatures = async () => {
