@@ -45,7 +45,5 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         run: |
           pytest --maxfail=1 --disable-warnings
