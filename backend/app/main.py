@@ -1,7 +1,7 @@
-from fastapi import FastAPI
-from app.database.session import engine, get_db
 from app.database.models import Base  # Import Base here
+from app.database.session import engine
 from app.routers.v1 import feature_flag
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -17,6 +17,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(feature_flag.router, prefix="/api/v1/features", tags=["features"])
+
 
 # Create tables (for development only)
 @app.on_event("startup")

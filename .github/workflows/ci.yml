@@ -46,10 +46,9 @@ jobs:
       
       - name: Run linters
         run: |
-          cd backend
-          black --check .
-          isort --check-only .
-          flake8 .
+          black --check backend/
+          isort --check backend/
+          flake8 --max-line-length=120 --ignore=E712,W503,E203 backend/
 
       - name: Install dependencies
         run: |
