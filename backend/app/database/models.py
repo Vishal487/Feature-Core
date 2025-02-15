@@ -1,8 +1,8 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
-from sqlalchemy.orm import relationship, declarative_base
-from sqlalchemy import CheckConstraint
+from sqlalchemy import Boolean, CheckConstraint, Column, ForeignKey, Integer, String
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()  # Define Base here
+
 
 class FeatureFlag(Base):
     __tablename__ = "feature_flags"
@@ -17,6 +17,4 @@ class FeatureFlag(Base):
     parent = relationship("FeatureFlag", remote_side=[id], back_populates="children")
 
     # Add CHECK constraint
-    __table_args__ = (
-        CheckConstraint("parent_id != id", name="check_parent_not_self"),
-    )
+    __table_args__ = (CheckConstraint("parent_id != id", name="check_parent_not_self"),)
