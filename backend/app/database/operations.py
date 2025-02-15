@@ -49,7 +49,7 @@ async def get_all_db_features(db: AsyncSession, flatten: bool = False):
             .options(
                 selectinload(FeatureFlag.children).selectinload(FeatureFlag.children)
             )  # Load nested children
-            .filter(FeatureFlag.parent_id is None)
+            .filter(FeatureFlag.parent_id == None)
         )
 
     return result.scalars().all()
