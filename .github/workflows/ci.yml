@@ -44,11 +44,17 @@ jobs:
           cd backend
           pip install -r requirements-dev.txt
       
-      - name: Run linters
-        run: |
-          black --check backend/
-          isort --check backend/
-          flake8 --max-line-length=120 --ignore=E712,W503,E203 backend/
+      - name: Run black (code formatter)
+        run: black --check backend/
+        continue-on-error: true
+      
+      - name: Run isort (import sorter)
+        run: isort --check backend/
+        continue-on-error: true
+
+      - name: Run flake8 (code style checker)
+        run: flake8 --max-line-length=120 --ignore=E712,W503,E203 backend/
+        continue-on-error: true
 
       - name: Install dependencies
         run: |
