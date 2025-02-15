@@ -11,7 +11,7 @@ on:
       - develop
 
 jobs:
-  test:
+  Test:
     runs-on: ubuntu-latest
 
     services:
