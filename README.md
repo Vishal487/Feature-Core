@@ -1,6 +1,9 @@
 # Feature-Core
 ![Logo](frontend/src/assets/logo.png)
 
+[![CI Pipeline](https://github.com/Vishal487/Feature-Core/actions/workflows/ci.yml/badge.svg)](https://github.com/Vishal487/Feature-Core/actions/workflows/ci.yml)
+[![Backend Performance Test](https://github.com/Vishal487/Feature-Core/actions/workflows/perf-test.yml/badge.svg)](https://github.com/Vishal487/Feature-Core/actions/workflows/perf-test.yml)
+
 **Feature-Core** is a feature management system designed to help you manage feature flags with ease. It supports **parent-child relationships** between feature flags, allowing you to enable or disable features hierarchically. Built with **FastAPI** (backend) and **React** (frontend), Feature-Core is production-ready and easy to set up.
 
 ## Features
