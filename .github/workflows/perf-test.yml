@@ -67,7 +67,7 @@ jobs:
           locust -f locustfile.py --headless -u 10 -r 2 --run-time 2m --host http://localhost:8000
 
       - name: Upload Locust Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: locust-report
