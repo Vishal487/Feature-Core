@@ -52,7 +52,7 @@ jobs:
       - name: Wait for Backend to be Ready
         run: |
           for i in {1..30}; do
-            if curl -s http://localhost:8000/health | grep "ok"; then
+            if curl -s http://localhost:8000/health | grep "healthy"; then
               echo "✅ Backend is up!"
               exit 0
             fi
