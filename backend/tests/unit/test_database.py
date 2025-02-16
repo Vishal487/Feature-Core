@@ -1,12 +1,8 @@
 import pytest
 from app.database.models import FeatureFlag
-from app.database.operations import (
-    add_feature,
-    delete_db_feature,
-    get_all_db_features,
-    get_feature_by_id,
-    get_feature_by_name,
-)
+from app.database.operations import (add_feature, delete_db_feature,
+                                     get_all_db_features, get_feature_by_id,
+                                     get_feature_by_name)
 from app.utility.exceptions import FeatureNotFoundException
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError

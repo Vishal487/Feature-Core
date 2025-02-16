@@ -1,14 +1,11 @@
 from app.database.session import get_db
 from app.routers.v1.schemas import AllFeaturesList, Feature, FeatureCreate
 from app.services import feature_flag as feature_flag_svc
-from app.utility.exceptions import (
-    DeletingParentFeature,
-    DuplicateFeatureNameException,
-    FeatureNotFoundException,
-    NameLengthLimitException,
-    NestedChildException,
-    SelfParentException,
-)
+from app.utility.exceptions import (DeletingParentFeature,
+                                    DuplicateFeatureNameException,
+                                    FeatureNotFoundException,
+                                    NameLengthLimitException,
+                                    NestedChildException, SelfParentException)
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
