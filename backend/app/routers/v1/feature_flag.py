@@ -12,7 +12,7 @@ from app.utility.exceptions import (
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/features", tags=["feature"])
 
 
 # Common function to handle exceptions
