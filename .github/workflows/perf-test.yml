@@ -1,4 +1,4 @@
-name: Backend & Locust Performance Test
+name: Backend Performance Test
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
           pip install -r requirements.txt  # Install your backend dependencies
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 &  # Run FastAPI
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/test_db
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
 
       - name: Wait for Backend to be Ready
         run: |
