@@ -1,10 +1,20 @@
 name: Backend Performance Test
 
 on:
-  push:
-    branches:
-      - develop
-  pull_request:
+    workflow_dispatch:  # Enables manual trigger
+      inputs:
+        num_users:
+          description: 'Number of Users'
+          required: true
+          default: '10'
+        spawn_rate:
+          description: 'Spawn Rate (users per second)'
+          required: true
+          default: '5'
+        run_time:
+          description: 'Run Duration (in minutes)'
+          required: true
+          default: '5'
 
 jobs:
   Performance-Test:
@@ -64,7 +74,7 @@ jobs:
       - name: Run Locust Tests
         run: |
           cd backend/tests/perf/
-          locust -f locustfile.py --headless -u 10 -r 2 --run-time 2m --host http://localhost:8000
+          locust -f load_test.py --headless -u ${{ github.event.inputs.num_users }} -r ${{ github.event.inputs.spawn_rate }} --run-time ${{ github.event.inputs.run_time }}m --host=http://localhost:8000
 
       - name: Upload Locust Report
         uses: actions/upload-artifact@v4
