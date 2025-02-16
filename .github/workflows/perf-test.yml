@@ -85,9 +85,6 @@ jobs:
           cd backend/tests/perf/
           locust -f locustfile.py --headless -u 10 -r 2 --run-time 2m --host http://localhost:8000 --html=./report.html
         #   locust -f load_test.py --headless -u ${{ github.event.inputs.num_users }} -r ${{ github.event.inputs.spawn_rate }} --run-time ${{ github.event.inputs.run_time }}m --host=http://localhost:8000
-
-      - name: List files before upload
-        run: ls -la
       
       - name: Upload Locust Report
         uses: actions/upload-artifact@v4
