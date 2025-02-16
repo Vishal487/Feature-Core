@@ -3,26 +3,16 @@ from unittest.mock import AsyncMock
 import pytest
 from app.database.models import FeatureFlag
 from app.routers.v1.schemas import Feature, FeatureCreate
-
 # Import your service functions and exceptions
-from app.services.feature_flag import (
-    check_feature_name_exists,
-    create_feature,
-    delete_feature,
-    dernomalize_feature_and_children_names,
-    get_all_features,
-    get_feature_details,
-    update_feature,
-    validate_parent,
-)
-from app.utility.exceptions import (
-    DBIntegrityError,
-    DeletingParentFeature,
-    DuplicateFeatureNameException,
-    FeatureNotFoundException,
-    NestedChildException,
-    SelfParentException,
-)
+from app.services.feature_flag import (check_feature_name_exists,
+                                       create_feature, delete_feature,
+                                       dernomalize_feature_and_children_names,
+                                       get_all_features, get_feature_details,
+                                       update_feature, validate_parent)
+from app.utility.exceptions import (DBIntegrityError, DeletingParentFeature,
+                                    DuplicateFeatureNameException,
+                                    FeatureNotFoundException,
+                                    NestedChildException, SelfParentException)
 
 
 # ------------------------------------------------------------

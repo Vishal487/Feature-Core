@@ -4,10 +4,8 @@ import pytest
 from app.main import app  # Assuming your FastAPI app is initialized in main.py
 from app.routers.v1.schemas import AllFeaturesList, Feature, FeatureCreate
 from app.services import feature_flag as feature_flag_svc
-from app.utility.exceptions import (
-    DuplicateFeatureNameException,
-    FeatureNotFoundException,
-)
+from app.utility.exceptions import (DuplicateFeatureNameException,
+                                    FeatureNotFoundException)
 from fastapi.testclient import TestClient
 
 # Test client

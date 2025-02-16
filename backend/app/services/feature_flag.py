@@ -1,22 +1,15 @@
 from app.database.models import FeatureFlag
-from app.database.operations import (
-    add_feature,
-    delete_db_feature,
-    get_all_db_features,
-    get_feature_by_id,
-    get_feature_by_name,
-)
+from app.database.operations import (add_feature, delete_db_feature,
+                                     get_all_db_features, get_feature_by_id,
+                                     get_feature_by_name)
 from app.routers.v1.schemas import AllFeaturesList, Feature, FeatureCreate
-from app.services.constants import FEATURE_NAME_LOWER_LIMIT, FEATURE_NAME_UPPER_LIMIT
-from app.utility.exceptions import (
-    DBIntegrityError,
-    DeletingParentFeature,
-    DuplicateFeatureNameException,
-    FeatureNotFoundException,
-    NameLengthLimitException,
-    NestedChildException,
-    SelfParentException,
-)
+from app.services.constants import (FEATURE_NAME_LOWER_LIMIT,
+                                    FEATURE_NAME_UPPER_LIMIT)
+from app.utility.exceptions import (DBIntegrityError, DeletingParentFeature,
+                                    DuplicateFeatureNameException,
+                                    FeatureNotFoundException,
+                                    NameLengthLimitException,
+                                    NestedChildException, SelfParentException)
 from app.utility.utils import denormalize_name, normalize_name
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
