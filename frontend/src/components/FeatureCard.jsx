@@ -1,8 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Switch, IconButton, TextField, Button, Collapse, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Card, Fab, CardContent, Switch, IconButton, TextField, Button, Collapse, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningDialog from './WarningDialog';
+// import EditFeatureModal from "./EditModal";
+import EditIcon from '@mui/icons-material/Edit';
+import { Modal, Box, FormControlLabel,  MenuItem } from '@mui/material';
+
+
+const editModalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+};
 
 const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
@@ -10,6 +25,7 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }
   const [warningOpen, setWarningOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
     setLocalFeature(feature); // Sync with updated props
@@ -64,6 +80,10 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }
     setDeleteConfirmOpen(false);
   };
 
+  const handleEdit = () => {
+    setEditModalOpen(true)
+  }
+
   return (
     <Card variant="outlined" sx={{ margin: '1rem' }}>
       <CardContent>
@@ -81,12 +101,12 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }
 
           {/* Feature Name Input */}
           <Grid item xs>
-            <TextField 
-              label="Feature Name" 
-              value={localFeature.name} 
-              onChange={handleNameChange} 
-              variant="standard" 
-              fullWidth 
+            <TextField
+              label="Feature Name"
+              value={localFeature.name}
+              onChange={handleNameChange}
+              variant="standard"
+              fullWidth
               required
             />
           </Grid>
@@ -103,6 +123,13 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }
             </Button>
           </Grid>
 
+          {/* Edit Button */}
+          <Grid item>
+            <IconButton variant="contained" color="secondary" onClick={handleEdit}>
+              <EditIcon />
+            </IconButton>
+          </Grid>
+
           {/* Delete Button */}
           <Grid item>
             <IconButton color="error" onClick={handleDelete}>
@@ -116,13 +143,13 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }
       {feature.children && feature.children.length > 0 && (
         <Collapse in={expanded}>
           {feature.children.map(child => (
-            <FeatureCard 
-              key={child.id} 
-              feature={child} 
-              onSave={onSave} 
-              onToggleChange={onToggleChange} 
-              onNameChange={onNameChange} 
-              onDelete={onDelete} 
+            <FeatureCard
+              key={child.id}
+              feature={child}
+              onSave={onSave}
+              onToggleChange={onToggleChange}
+              onNameChange={onNameChange}
+              onDelete={onDelete}
             />
           ))}
         </Collapse>
@@ -142,6 +169,25 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* EditModal */}
+      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)}>
+        <Box sx={editModalStyle}>
+          <TextField required label="Feature Name" value={feature.name}  fullWidth margin="normal" />
+          <FormControlLabel control={<Switch checked={feature.is_enabled}  />} label="Enabled" />
+          <TextField label="Parent Feature" select fullWidth margin="normal" value={feature.parent_id} >
+            <MenuItem value="">None</MenuItem>
+            {/* {topLevelFeatures.map(feature => (
+              <MenuItem key={feature.id} value={feature.id}>{feature.name}</MenuItem>
+            ))} */}
+          </TextField>
+          {/* {error && <Box sx={{ color: 'red', my: 1 }}>{error}</Box>} */}
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button onClick={() => setEditModalOpen(false)} sx={{ mr: 1 }}>Cancel</Button>
+            <Button  variant="contained" >Save</Button>
+          </Box>
+        </Box>
+      </Modal>
     </Card>
   );
 };
