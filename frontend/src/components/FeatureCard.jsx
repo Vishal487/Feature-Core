@@ -3,7 +3,7 @@ import { Card, Fab, CardContent, Switch, IconButton, TextField, Button, Collapse
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningDialog from './WarningDialog';
-// import EditFeatureModal from "./EditModal";
+import EditFeatureModal from "./EditModal";
 import EditIcon from '@mui/icons-material/Edit';
 import { Modal, Box, FormControlLabel,  MenuItem } from '@mui/material';
 
@@ -171,23 +171,30 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }
       </Dialog>
 
       {/* EditModal */}
-      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)}>
+      {/* <Modal title="Edit Feature" open={editModalOpen} onClose={() => setEditModalOpen(false)}>
         <Box sx={editModalStyle}>
           <TextField required label="Feature Name" value={feature.name}  fullWidth margin="normal" />
           <FormControlLabel control={<Switch checked={feature.is_enabled}  />} label="Enabled" />
           <TextField label="Parent Feature" select fullWidth margin="normal" value={feature.parent_id} >
             <MenuItem value="">None</MenuItem>
-            {/* {topLevelFeatures.map(feature => (
+            {topLevelFeatures.map(feature => (
               <MenuItem key={feature.id} value={feature.id}>{feature.name}</MenuItem>
-            ))} */}
+            ))}
           </TextField>
-          {/* {error && <Box sx={{ color: 'red', my: 1 }}>{error}</Box>} */}
+          {error && <Box sx={{ color: 'red', my: 1 }}>{error}</Box>}
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
             <Button onClick={() => setEditModalOpen(false)} sx={{ mr: 1 }}>Cancel</Button>
             <Button  variant="contained" >Save</Button>
           </Box>
         </Box>
-      </Modal>
+      </Modal> */}
+
+      <EditFeatureModal 
+        feature={feature}
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+      />
+
     </Card>
   );
 };
