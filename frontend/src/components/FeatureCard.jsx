@@ -146,7 +146,7 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }
             <FeatureCard
               key={child.id}
               feature={child}
-              onSave={onSave}
+              onSave={() => handleSave()}
               onToggleChange={onToggleChange}
               onNameChange={onNameChange}
               onDelete={onDelete}
@@ -190,9 +190,10 @@ const FeatureCard = ({ feature, onSave, onToggleChange, onNameChange, onDelete }
       </Modal> */}
 
       <EditFeatureModal 
-        feature={feature}
+        feature={localFeature}
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
+        onSave={() => handleSave()}
       />
 
     </Card>
