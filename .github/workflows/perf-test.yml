@@ -1,0 +1,93 @@
+name: Backend Performance Test
+
+on:
+    workflow_dispatch:  # Enables manual trigger
+      inputs:
+        num_users:
+          description: 'Number of Users'
+          required: true
+          default: '10'
+        spawn_rate:
+          description: 'Spawn Rate (users per second)'
+          required: true
+          default: '5'
+        run_time:
+          description: 'Run Duration (in minutes)'
+          required: true
+          default: '5'
+
+# on:
+#     push:
+#       branches:
+#         - develop
+#     pull_request:
+#         branches:
+#             - develop
+
+
+jobs:
+  Performance-Test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d test_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Locust
+        run: |
+          python -m pip install --upgrade pip
+          pip install locust
+
+      - name: Set up Backend Service
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          cd backend/
+          pip install -r requirements.txt  # Install your backend dependencies
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 &  # Run FastAPI
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+
+      - name: Wait for Backend to be Ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/health | grep "healthy"; then
+              echo "✅ Backend is up!"
+              exit 0
+            fi
+            echo "⏳ Waiting for backend to be ready..."
+            sleep 2
+          done
+          echo "❌ Backend did not start in time!" && exit 1
+
+      - name: Run Locust Tests
+        run: |
+          cd backend/tests/perf/
+          locust -f locustfile.py --headless -u ${{ github.event.inputs.num_users }} -r ${{ github.event.inputs.spawn_rate }} --run-time ${{ github.event.inputs.run_time }}m --host http://localhost:8000 --html=./report.html
+      
+      - name: Upload Locust Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: locust-report
+          path: backend/tests/perf/report.html

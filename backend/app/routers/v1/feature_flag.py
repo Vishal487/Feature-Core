@@ -1,111 +1,105 @@
+from app.database.session import get_db
+from app.routers.v1.schemas import AllFeaturesList, Feature, FeatureCreate
+from app.services import feature_flag as feature_flag_svc
+from app.utility.exceptions import (DeletingParentFeature,
+                                    DuplicateFeatureNameException,
+                                    FeatureNotFoundException,
+                                    NameLengthLimitException,
+                                    NestedChildException, SelfParentException)
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database.session import get_db
-from app.database.models import FeatureFlag
-from app.routers.v1.schemas import FeatureCreate, Feature
-from sqlalchemy.future import select
 
-from app.utility.utils import normalize_name, denormalize_name
-
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/features", tags=["feature"])
 
 
-
-async def validate_parent(db: AsyncSession, parent_id: int, current_feature_id: int = None):
-    # Rule 1: A feature can't be its own parent
-    if parent_id and parent_id == current_feature_id:
-        raise HTTPException(status_code=400, detail="Feature cannot be its own parent")
-    
-    # Rule 2: Parent must exist (if provided)
-    if parent_id is not None:
-        parent = await db.get(FeatureFlag, parent_id)
-        if not parent:
-            raise HTTPException(status_code=404, detail="Parent not found")
-        
-        # Rule 3: Parent must not have its own parent (no nested relationships)
-        if parent.parent_id is not None:
-            raise HTTPException(
-                status_code=400,
-                detail="Parent already has a parent (only one-level relationships allowed)"
-            )
-
-
-async def get_children(db: AsyncSession, parent_id: int):
-    result = await db.execute(select(FeatureFlag).filter(FeatureFlag.parent_id == parent_id))
-    return result.scalars().all()
+# Common function to handle exceptions
+def handle_exceptions(exception):
+    exception_map = {
+        DuplicateFeatureNameException: (409, "Feature with this name already exists"),
+        SelfParentException: (400, "Feature cannot be its own parent"),
+        FeatureNotFoundException: (404, "Feature or parent feature not found"),
+        NestedChildException: (400, "Only one-level relationships allowed)"),
+    }
+    status_code, detail = exception_map.get(
+        type(exception), (500, "Internal server error")
+    )
+    raise HTTPException(status_code=status_code, detail=detail)
 
 
 @router.post("/", response_model=Feature)
 async def create_feature(feature: FeatureCreate, db: AsyncSession = Depends(get_db)):
-    # Normalize the feature name
-    normalized_name = normalize_name(feature.name)
-
-    # Check if a feature with the same name already exists
-    existing_feature = await db.execute(
-        select(FeatureFlag).filter(FeatureFlag.name == normalized_name)
-    )
-    if existing_feature.scalar():
+    try:
+        feature_response = await feature_flag_svc.create_feature(db, feature)
+        return feature_response
+    except NameLengthLimitException:
+        raise HTTPException(status_code=400, detail="Feature name is not within limit")
+    except DuplicateFeatureNameException:
         raise HTTPException(
-            status_code=409,
-            detail="Feature with this name already exists"
+            status_code=409, detail="Feature with this name already exists"
         )
+    except SelfParentException:
+        raise HTTPException(status_code=400, detail="Feature cannot be its own parent")
+    except FeatureNotFoundException:
+        raise HTTPException(status_code=404, detail="Parent not found")
+    except NestedChildException:
+        raise HTTPException(
+            status_code=400,
+            detail="Parent already has a parent (only one-level relationships allowed)",
+        )
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
-    # Validate parent rules
-    await validate_parent(db, feature.parent_id)
-    
-    # Create feature with normalized name
-    db_feature = FeatureFlag(
-        name=normalized_name,
-        is_enabled=feature.is_enabled,
-        parent_id=feature.parent_id
-    )
-    # add to db
-    db.add(db_feature)
-    await db.commit()
-
-    # Refresh the feature to load relationships (eagerly load children)
-    # this is to load refresh the 'db_feature' object. So it is required to fetch the latest from db
-    # This is required to fetch the auto-generated fields, for eg. 'id' and 'children'. So if not required, we can skip.
-    await db.refresh(db_feature, ["children"])
-    
-    # Convert SQLAlchemy model to Pydantic model
-    feature_response = Feature.model_validate(db_feature)
-    
-    # Denormalize names for response
-    feature_response.name = denormalize_name(db_feature.name)
-    for child in feature_response.children:
-        child.name = denormalize_name(child.name)
-    
-    return feature_response
 
 @router.get("/{feature_id}", response_model=Feature)
-async def read_feature(feature_id: int, db: AsyncSession = Depends(get_db)):
-    feature = await db.get(FeatureFlag, feature_id)
-    if not feature:
+async def get_feature_details(feature_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        return await feature_flag_svc.get_feature_details(db, feature_id)
+    except FeatureNotFoundException:
         raise HTTPException(status_code=404, detail="Feature not found")
-    
-    # Get children recursively
-    feature.children = await get_children(db, feature_id)
-    return feature
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @router.put("/{feature_id}", response_model=Feature)
 async def update_feature(
-    feature_id: int, 
-    feature_update: FeatureCreate, 
-    db: AsyncSession = Depends(get_db)
+    feature_id: int, feature_update: FeatureCreate, db: AsyncSession = Depends(get_db)
 ):
-    # Fetch existing feature
-    db_feature = await db.get(FeatureFlag, feature_id)
-    if not db_feature:
+    try:
+        return await feature_flag_svc.update_feature(db, feature_id, feature_update)
+    except NameLengthLimitException:
+        raise HTTPException(status_code=400, detail="Feature name is not within limit")
+    except DuplicateFeatureNameException:
+        raise HTTPException(
+            status_code=409, detail="Feature with this name already exists"
+        )
+    except SelfParentException:
+        raise HTTPException(status_code=400, detail="Feature cannot be its own parent")
+    except FeatureNotFoundException:
+        raise HTTPException(status_code=404, detail="Feature or Parent not found")
+    except NestedChildException:
+        raise HTTPException(
+            status_code=400,
+            detail="Parent or current feature is a parent (only one-level relationships allowed)",
+        )
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("", response_model=AllFeaturesList)
+async def get_all_features(db: AsyncSession = Depends(get_db)):
+    try:
+        return await feature_flag_svc.get_all_features(db)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/{feature_id}")
+async def delete_feature(feature_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        await feature_flag_svc.delete_feature(db, feature_id)
+    except FeatureNotFoundException:
         raise HTTPException(status_code=404, detail="Feature not found")
-
-    # Validate parent rules (include current_feature_id to check self-parenting)
-    await validate_parent(db, feature_update.parent_id, current_feature_id=feature_id)
-
-    # Update fields
-    for key, value in feature_update.model_dump().items():
-        setattr(db_feature, key, value)
-    
-    await db.commit()
-    await db.refresh(db_feature)
-    return db_feature
+    except DeletingParentFeature:
+        raise HTTPException(status_code=400, detail="Parent feature can't be deleted")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
