@@ -6,6 +6,10 @@
 
 **Feature-Core** is a feature management system designed to help you manage feature flags with ease. It supports **parent-child relationships** between feature flags, allowing you to enable or disable features hierarchically. Built with **FastAPI** (backend) and **React** (frontend), Feature-Core is production-ready and easy to set up.
 
+![demo](./images/demo.gif)
+
+[Watch full demo](https://www.loom.com/share/16ef6d3c51b5491daf01c1d207479fb8)
+
 ## Features
 **1. Feature Flag Management**
 - **Create**, **Update**, and **Delete** feature flags.
