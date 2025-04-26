@@ -42,7 +42,13 @@ const App = () => {
       loadFeatures();
     } catch (err) {
       // console.error("Failed to delete feature:", err);
-      showErrorSnackbar('Failed to delete feature.');
+      var errMessage = 'Failed to delete feature.';
+      if (err.response && err.response.status === 400) {
+        errMessage = err.response.data.detail;
+      } else if (err.response && err.response.status === 500) {
+        errMessage = 'Server error. Please try again later.';
+      }
+      showErrorSnackbar(errMessage);
     }
   };
 
